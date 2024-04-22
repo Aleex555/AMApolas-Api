@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const AdmZip = require('adm-zip');
 const fs = require('fs');
-const path = require('path');
 
 // Define el esquema de la colección
 const palabraSchema = new mongoose.Schema({
@@ -14,8 +13,7 @@ const palabraSchema = new mongoose.Schema({
 const Palabra = mongoose.model('Diccionario', palabraSchema);
 
 async function main() {
-    // Usa __dirname para construir la ruta del archivo ZIP relativa al script actual
-    const zipFilePath = path.join(__dirname, 'Api', 'data', 'DISC2-LP.zip');
+    const zipFilePath = '/root/AMApolas-Api/Api/data/DISC2-LP.zip';
     const mongoUri = 'mongodb://elTeuUsuari:laTeuaContrasenya@localhost:27017/dam2-pj03?authSource=admin';
 
     // Conexión a MongoDB utilizando Mongoose
@@ -36,15 +34,22 @@ async function main() {
         if (zipEntry) {
             const data = zipEntry.getData().toString('utf8');
             const lines = data.split(/\r?\n/);
-            const documents = lines.map(line => new Palabra({
-                idioma: 'catalan',
-                palabra: line.trim(),
-                veces_utilizadas: 0
-            }));
+            const documents = lines
+                .map(line => line.trim())
+                .filter(line => line.length > 0) // Filtra líneas vacías
+                .map(line => new Palabra({
+                    idioma: 'catalan',
+                    palabra: line,
+                    veces_utilizadas: 0
+                }));
 
             // Inserta los documentos en MongoDB
-            await Palabra.insertMany(documents);
-            console.log("Datos insertados correctamente en MongoDB.");
+            if (documents.length > 0) {
+                await Palabra.insertMany(documents);
+                console.log("Datos insertados correctamente en MongoDB.");
+            } else {
+                console.log("No hay datos válidos para insertar.");
+            }
         } else {
             console.log("No se encontró el archivo dentro del ZIP.");
         }
