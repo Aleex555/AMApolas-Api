@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const AdmZip = require('adm-zip');
 const fs = require('fs');
-const readline = require('readline');
+const path = require('path');
 
 // Define el esquema de la colección
 const palabraSchema = new mongoose.Schema({
@@ -14,46 +14,47 @@ const palabraSchema = new mongoose.Schema({
 const Palabra = mongoose.model('Diccionario', palabraSchema);
 
 async function main() {
-    const zipFilePath = './data/DISC2-LP.zip';
+    // Usa __dirname para construir la ruta del archivo ZIP relativa al script actual
+    const zipFilePath = path.join(__dirname, 'Api', 'data', 'DISC2-LP.zip');
     const mongoUri = 'mongodb://elTeuUsuari:laTeuaContrasenya@localhost:27017/dam2-pj03';
 
     // Conexión a MongoDB utilizando Mongoose
-    await mongoose.connect(mongoUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    });
+    try {
+        await mongoose.connect(mongoUri);
+        console.log("Connected to MongoDB");
 
-    // Leer el archivo ZIP
-    const zip = new AdmZip(zipFilePath);
-    const zipEntry = zip.getEntry('DISC2/DISC2-LP.txt');
-
-    if (zipEntry) {
-        // Leer el contenido del archivo dentro del ZIP
-        const buffer = zipEntry.getData();
-        const stream = readline.createInterface({
-            input: fs.createReadStream(buffer)
-        });
-
-        const documents = [];
-
-        for await (const line of stream) {
-            const document = new Palabra({
-                idioma: "catalan",
-                palabra: line.trim(),
-                veces_utilizadas: 0
-            });
-            documents.push(document);
+        // Verificar que el archivo ZIP existe
+        if (!fs.existsSync(zipFilePath)) {
+            console.error('Archivo ZIP no encontrado:', zipFilePath);
+            return;
         }
 
-        // Inserta los documentos en MongoDB
-        await Palabra.insertMany(documents);
-        console.log("Datos insertados correctamente en MongoDB.");
-    } else {
-        console.log("No se encontró el archivo dentro del ZIP.");
-    }
+        // Leer el archivo ZIP
+        const zip = new AdmZip(zipFilePath);
+        const zipEntry = zip.getEntry('DISC2/DISC2-LP.txt');
 
-    // Cierra la conexión con MongoDB
-    mongoose.disconnect();
+        if (zipEntry) {
+            const data = zipEntry.getData().toString('utf8');
+            const lines = data.split(/\r?\n/);
+            const documents = lines.map(line => new Palabra({
+                idioma: 'catalan',
+                palabra: line.trim(),
+                veces_utilizadas: 0
+            }));
+
+            // Inserta los documentos en MongoDB
+            await Palabra.insertMany(documents);
+            console.log("Datos insertados correctamente en MongoDB.");
+        } else {
+            console.log("No se encontró el archivo dentro del ZIP.");
+        }
+    } catch (err) {
+        console.error("Error:", err);
+    } finally {
+        // Cierra la conexión con MongoDB
+        await mongoose.disconnect();
+        console.log("Disconnected from MongoDB");
+    }
 }
 
-main();
+main().catch(err => console.error(err));
