@@ -16,7 +16,7 @@ const Palabra = mongoose.model('Diccionario', palabraSchema);
 async function main() {
     // Usa __dirname para construir la ruta del archivo ZIP relativa al script actual
     const zipFilePath = path.join(__dirname, 'Api', 'data', 'DISC2-LP.zip');
-    const mongoUri = 'mongodb://elTeuUsuari:laTeuaContrasenya@localhost:27017/dam2-pj03';
+    const mongoUri = 'mongodb://elTeuUsuari:laTeuaContrasenya@localhost:27017/dam2-pj03?authSource=admin';
 
     // Conexión a MongoDB utilizando Mongoose
     try {
