@@ -34,22 +34,20 @@ async function main() {
         if (zipEntry) {
             const data = zipEntry.getData().toString('utf8');
             const lines = data.split(/\r?\n/);
-            const documents = lines
-                .map(line => line.trim())
-                .filter(line => line.length > 0) // Filtra líneas vacías
-                .map(line => new Palabra({
-                    idioma: 'catalan',
-                    palabra: line,
-                    veces_utilizadas: 0
-                }));
 
-            // Inserta los documentos en MongoDB
-            if (documents.length > 0) {
-                await Palabra.insertMany(documents);
-                console.log("Datos insertados correctamente en MongoDB.");
-            } else {
-                console.log("No hay datos válidos para insertar.");
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine.length > 0) {
+                    const documento = new Palabra({
+                        idioma: 'catalan',
+                        palabra: trimmedLine,
+                        veces_utilizadas: 0
+                    });
+                    // Inserta el documento en MongoDB
+                    await documento.save();
+                }
             }
+            console.log("Todos los datos fueron insertados correctamente en MongoDB.");
         } else {
             console.log("No se encontró el archivo dentro del ZIP.");
         }
