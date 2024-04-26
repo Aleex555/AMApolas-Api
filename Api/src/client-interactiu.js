@@ -8,7 +8,7 @@ const rl = readline.createInterface({
 });
 
 // Connecta al servidor
-const socket = io('http://127.0.0.1:3000');
+const socket = io('http://roscodrom6.ieti.site');
 
 socket.on('connect', () => {
   console.log('Connectat al servidor');
@@ -17,7 +17,26 @@ socket.on('connect', () => {
 
 // Gestiona la resposta del servidor
 socket.on('TEMPS_PER_INICI', (data) => {
-  console.log(`Temps restant per l'inici: ${data.tempsRestant} ms, En Partida: ${data.enPartida ? 'Sí' : 'No'}`);
+  if (data.enPartida) {
+      console.log(`\nTemps restant de la partida: ${Math.round(data.tempsRestant / 1000)}s, En Partida: Sí`);
+  } else {
+      console.log(`\nTemps restant per l'inici: ${Math.round(data.tempsRestant / 1000)}s, En Partida: No`);
+  }
+  mostrarMenu();
+});
+
+socket.on('ALTA_CONFIRMADA', (data) => {
+  console.log(data.message);
+  mostrarMenu();
+});
+
+socket.on('Puntuacion', (data) => {
+  console.log(data.message);
+  mostrarMenu();
+});
+
+socket.on('PARTIDA_INICIADA', (data) => {
+  console.log(data.message);
   mostrarMenu();
 });
 
@@ -65,7 +84,6 @@ function altaAPartida() {
   rl.question('Introdueix el teu nickname: ', (nickname) => {
     rl.question('Introdueix la teva API_KEY: ', (apiKey) => {
       socket.emit('ALTA', `ALTA=${nickname};API_KEY=${apiKey}`);
-      mostrarMenu();
     });
   });
 }
@@ -73,8 +91,8 @@ function altaAPartida() {
 function enviarParaula() {
   rl.question('Introdueix la paraula que vols enviar: ', (paraula) => {
     rl.question('Introdueix la teva API_KEY: ', (apiKey) => {
-      socket.emit('PARAULA', `PARAULA=${paraula};API_KEY=${apiKey}`);
-      mostrarMenu();
+      socket.emit('PARAULA', { paraula: paraula, API_KEY: apiKey });
     });
   });
 }
+
