@@ -1,6 +1,7 @@
 const app = require('./app');
 const http = require('http');
 const { Server } = require('socket.io');
+let letras = null;
 
 const server = http.createServer(app);
 const io = new Server(server);
@@ -25,7 +26,8 @@ class Joc {
       const nextDuration = this.enPartida ? this.partidaDuracio : this.pausaDuracio;
       this.properInici = Date.now() + nextDuration;
       if (this.enPartida) {
-        io.emit('PARTIDA_INICIADA', { message: '\n¡Una nueva partida ha comenzado!', enPartida: this.enPartida });
+        letras = this.generarLetrasAleatorias();
+        io.emit('PARTIDA_INICIADA', { message: '\n¡Una nueva partida ha comenzado!', enPartida: this.enPartida ,letras : letras});
       }
       this.ciclarJoc();
     }, this.enPartida ? this.partidaDuracio : this.pausaDuracio);
@@ -35,7 +37,14 @@ class Joc {
     const tempsRestant = this.properInici - Date.now();
     return { tempsRestant, enPartida: this.enPartida };
   }
+
+  generarLetrasAleatorias() {
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J','L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V','X', 'Y', 'Z'];
+    return letters.sort(() => 0.5 - Math.random()).slice(0, 7).map(letra => ({ letra }));
+  }
 }
+
+
 
 
 
@@ -54,6 +63,9 @@ const joc = new Joc(60000, 60000);
 
 io.on('connection', (socket) => {
   console.log('Usuari connectat');
+
+  const respostaInmediata = joc.consultaTempsRestant();
+  socket.emit('TEMPS_PER_INICI', respostaInmediata);
   
   const intervalId = setInterval(() => {
     const resposta = joc.consultaTempsRestant();

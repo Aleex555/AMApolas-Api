@@ -8,7 +8,7 @@ const rl = readline.createInterface({
 });
 
 // Connecta al servidor
-const socket = io('http://roscodrom6.ieti.site');
+const socket = io('https://roscodrom6.ieti.site');
 
 socket.on('connect', () => {
   console.log('Connectat al servidor');
@@ -37,6 +37,9 @@ socket.on('Puntuacion', (data) => {
 
 socket.on('PARTIDA_INICIADA', (data) => {
   console.log(data.message);
+  const soloLetras = data.letras.map(item => item.letra);
+  console.log(soloLetras); 
+  
   mostrarMenu();
 });
 
