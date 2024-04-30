@@ -59,7 +59,7 @@ function calcularPuntuacio(paraula) {
   return puntuacio;
 }
 
-const joc = new Joc(60000, 60000);
+const joc = new Joc(20000, 20000);
 
 io.on('connection', (socket) => {
   console.log('Usuari connectat');

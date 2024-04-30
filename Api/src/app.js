@@ -70,6 +70,36 @@ app.post('/api/user/register', async (req, res) => {
   }
 });
 
+app.post('/api/user/update', async (req, res) => {
+  const { api_key, nickname, email, phone_number, avatar } = req.body;
+
+  if (!api_key) {
+    return res.status(400).send("API key is required.");
+  }
+
+  try {
+    // Busca el usuario por API key
+    const user = await User.findOne({ api_key: api_key });
+
+    if (!user) {
+      return res.status(404).send("User not found.");
+    }
+
+    if (nickname) user.nickname = nickname;
+    if (email) user.email = email;
+    if (phone_number) user.phone_number = phone_number;
+    if (avatar) user.avatar = avatar;
+
+    // Guarda los cambios en la base de datos
+    await user.save();
+
+    res.status(200).send(user);
+  } catch (err) {
+    console.error("Error while updating user:", err);
+    res.status(500).send(err.message);
+  }
+});
+
 // Endpoint para obtener todos los idiomas disponibles
 app.get('/api/languages', async (req, res) => {
   try {
