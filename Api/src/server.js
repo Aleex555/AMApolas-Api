@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const axios = require('axios');
 let letras = null;
+let letraslista = null;
 let partidaId = null;
 let cont = 0;
 
@@ -32,7 +33,7 @@ class Joc {
       this.properInici = Date.now() + nextDuration;
       if(this.enPartida){
         console.log("\nPARTIDA INICIADA\n");
-        io.emit('PARTIDA_INICIADA', { message: '\n¡Una nueva partida ha comenzado!', enPartida: this.enPartida ,letras : letras});
+        io.emit('PARTIDA_INICIADA', { message: '\n¡Una nueva partida ha comenzado!', enPartida: this.enPartida ,letras : letraslista});
 
       }else if (!this.enPartida){
         this.actualizarFechaFinPartida(partidaId);
@@ -45,6 +46,7 @@ class Joc {
   async iniciarPartida() {
     try {
       letras = this.generarLetrasAleatorias();
+      letraslista = letras.map(obj => obj.letra);
       const response = await axios.post('https://roscodrom6.ieti.site/api/games', {
         letrasDelRosco: letras
       });
@@ -70,8 +72,9 @@ class Joc {
   }
 
   generarLetrasAleatorias() {
-    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J','L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V','X', 'Y', 'Z'];
-    return letters.sort(() => 0.5 - Math.random()).slice(0, 7).map(letra => ({ letra }));
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'X', 'Y', 'Z'];
+    const numeroLetras = Math.floor(Math.random() * (10 - 6 + 1)) + 6;
+    return letters.sort(() => 0.5 - Math.random()).slice(0, numeroLetras).map(letra => ({ letra }));
   }
 
 
