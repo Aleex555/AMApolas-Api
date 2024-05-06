@@ -255,5 +255,5 @@ async function actualizarPuntuacionPalabra(apiKey, gameId, palabra, puntuacion) 
 
 
 
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 3001;
 server.listen(port, () => console.log(`Escoltant en el port ${port}...`));
