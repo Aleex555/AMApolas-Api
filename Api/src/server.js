@@ -101,7 +101,21 @@ const joc = new Joc(60000, 60000);
 
 io.on('connection', (socket) => {
   console.log('Usuari connectat');
-
+  
+  const participantsIntervalId = setInterval(async () => {
+    if (joc.enPartida) {
+      try {
+        const res = await fetch(`https://roscodrom6.ieti.site/api/games/${partidaId}/participants`);
+        const playerData = await res.json();
+        io.emit('DATOS_PARTICIPANTES', playerData);
+      } catch (error) {
+        console.error('Error fetching participant data:', error);
+        io.emit('ERROR_PARTICIPANTES', 'Error obtaining participant data');
+      }
+    } else {
+      io.emit('ESPERANDO_PARTIDA');
+    }
+  }, 1000);
   
   
   const intervalId = setInterval(() => {
@@ -112,6 +126,18 @@ io.on('connection', (socket) => {
   socket.on('TEMPS_PER_INICI', () => {
     const resposta = joc.consultaTempsRestant();
     socket.emit('TEMPS_PER_INICI', resposta);
+  });
+
+  socket.on('RANKING', async () => {
+    if (joc.enPartida) {
+      try {
+        const res = await fetch(`https://roscodrom6.ieti.site/api/games/${partidaId}/participants`);
+        const playerData = await res.json();
+        io.emit('DATOS_PARTICIPANTES', playerData);
+      } catch (error) {
+        console.error('Error fetching player data:', error);
+      }
+    }
   });
 
   socket.on('ALTA', async (data) => {
@@ -127,8 +153,7 @@ io.on('connection', (socket) => {
 
   socket.on('PARAULA', async (data) => {
     if (joc.enPartida) {
-      console.log(`Palabra: ${data.palabra}, API_KEY: ${data.apiKey}`);
-
+      console.log(`Palabra: ${data.palabra}, API_KEY: ${data.apiKey}, Nickname : ${data.nickname}`);
       if (data.palabra && data.apiKey) {
         const result = await mirarPalabra(data, partidaId);
       if (result.exists) {
@@ -137,6 +162,7 @@ io.on('connection', (socket) => {
           message: `Puntuación de la palabra '${data.palabra}': ${puntuacion}`,
           palabra: data.palabra,
           puntuacion: puntuacion,
+          nickname: data.nickname,
           existe: true
       });
         const updateResult = await actualizarPuntuacionPalabra(data.apiKey, partidaId, data.palabra, puntuacion);
@@ -145,7 +171,6 @@ io.on('connection', (socket) => {
         } else {
           console.log(`Error al actualizar la puntuación de la palabra '${data.palabra}': ${updateResult.message}`);
         }
-
         
       } else {
         socket.emit('Puntuacion', {
@@ -172,6 +197,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('Usuari desconnectat');
     clearInterval(intervalId);
+    clearInterval(participantsIntervalId);
   });
 });
 
@@ -254,9 +280,6 @@ async function actualizarPuntuacionPalabra(apiKey, gameId, palabra, puntuacion) 
     return { success: false, message: error.message };
   }
 }
-
-
-
 
 const port = process.env.PORT || 80;
 server.listen(port, () => console.log(`Escoltant en el port ${port}...`));

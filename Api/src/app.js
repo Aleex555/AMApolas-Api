@@ -358,6 +358,29 @@ app.patch('/api/games/:id/finish', async (req, res) => {
   }
 });
 
+// Endpoint para obtener nickname y puntuación total de los jugadores por idPartida
+app.get('/api/games/:id/participants', async (req, res) => {
+  try {
+      // Busca la partida por ID
+      const game = await Game.findById(req.params.id);
+      if (!game) {
+          return res.status(404).send("Partida no encontrada.");
+      }
+
+      // Extraer solo la información necesaria de los jugadores
+      const playerScores = game.jugadores.map(jugador => ({
+          nickname: jugador.nickname,
+          puntuacionTotal: jugador.puntuacionTotal
+      }));
+
+      // Responde al cliente con la información de los jugadores
+      res.status(200).json(playerScores);
+  } catch (error) {
+      console.error("Error al obtener jugadores y sus puntuaciones:", error);
+      res.status(500).send("Error interno del servidor.");
+  }
+});
+
 
 
 
