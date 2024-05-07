@@ -71,11 +71,34 @@ class Joc {
     }
   }
 
+  shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
+
   generarLetrasAleatorias() {
-    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'X', 'Y', 'Z'];
+    const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'X', 'Z'];
+    const vowels = ['A', 'E', 'I', 'O', 'U', 'Y'];
+
     const numeroLetras = Math.floor(Math.random() * (10 - 6 + 1)) + 6;
-    return letters.sort(() => 0.5 - Math.random()).slice(0, numeroLetras).map(letra => ({ letra }));
-  }
+    const numVocales = (numeroLetras >= 10 || numeroLetras === 9) ? 3 : 2;
+
+    this.shuffleArray(vowels);
+    this.shuffleArray(consonants);
+
+    const vocalesElegidas = vowels.slice(0, numVocales);
+    const numConsonantes = numeroLetras - numVocales;
+    const consonantesElegidas = consonants.slice(0, numConsonantes);
+
+    const letras = vocalesElegidas.concat(consonantesElegidas);
+    this.shuffleArray(letras);
+
+    return letras.map(letra => ({ letra }));
+}
 
 
   consultaTempsRestant() {
